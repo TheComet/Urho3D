@@ -148,6 +148,7 @@ void IKSolver::SetAlgorithm(IKSolver::Algorithm algorithm)
     if (solver_ != NULL)
     {
         initialFlags = solver_->flags;
+        DestroyTree();
         ik_solver_destroy(solver_);
     }
 
