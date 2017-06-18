@@ -2,8 +2,9 @@
 #define IK_TYPES_H
 
 /* IK specific types */
-typedef struct ik_chain_t ik_chain_t;
-typedef struct ik_chain_tree_t ik_chain_tree_t;
+typedef struct chain_t chain_t;
+typedef struct chain_island_t chain_island_t;
+typedef struct chain_tree_t chain_tree_t;
 typedef struct ik_constraint_t ik_constraint_t;
 typedef struct ik_effector_t ik_effector_t;
 typedef struct ik_node_t ik_node_t;

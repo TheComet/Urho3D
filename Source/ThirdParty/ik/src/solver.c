@@ -1,4 +1,4 @@
-#include "ik/chain.h"
+#include "ik/chain_tree.h"
 #include "ik/effector.h"
 #include "ik/log.h"
 #include "ik/memory.h"
@@ -74,7 +74,7 @@ ik_solver_create(enum solver_algorithm_e algorithm)
     memset(solver, 0, solver_size);
 
     ordered_vector_construct(&solver->effector_nodes_list, sizeof(ik_node_t*));
-    ordered_vector_construct(&solver->chain_trees, sizeof(ik_chain_tree_t));
+    chain_tree_construct(&solver->chain_tree);
 
     /* Now call derived construction */
     if (solver_construct(solver) < 0)
@@ -103,7 +103,7 @@ ik_solver_destroy(ik_solver_t* solver)
     if (solver->tree)
         ik_node_destroy(solver->tree);
 
-    ordered_vector_clear_free(&solver->chain_trees);
+    chain_tree_destruct(&solver->chain_tree);
     ordered_vector_clear_free(&solver->effector_nodes_list);
 
     FREE(solver);

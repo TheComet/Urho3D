@@ -2,9 +2,10 @@
 #define IK_SOLVER_H
 
 #include "ik/config.h"
+#include "ik/chain_tree.h"
 #include "ik/ordered_vector.h"
-#include "ik/vec3.h"
 #include "ik/quat.h"
+#include "ik/vec3.h"
 
 C_HEADER_BEGIN
 
@@ -63,7 +64,7 @@ typedef enum solver_flags_e
     ordered_vector_t                    effector_nodes_list;          \
     ik_node_t*                          tree;                         \
     /* list of ik_chain_tree_t objects (allocated in-place) */        \
-    ordered_vector_t                    chain_trees;
+    chain_tree_t                        chain_tree;
 
 struct ik_solver_t
 {

@@ -1,4 +1,4 @@
-#include "ik/chain.h"
+#include "ik/chain_tree.h"
 #include "ik/effector.h"
 #include "ik/log.h"
 #include "ik/node.h"
@@ -33,13 +33,13 @@ solver_1bone_rebuild(ik_solver_t* solver)
      * We need to assert that there really are only chains of length 1 and no
      * sub chains.
      */
-    ORDERED_VECTOR_FOR_EACH(&solver->chain_trees, ik_chain_tree_t, chain_tree)
-        if (ordered_vector_count(&chain_tree->root_chain.nodes) != 2) /* 2 nodes = 1 bone */
+    ORDERED_VECTOR_FOR_EACH(&solver->chain_tree.islands, chain_island_t, island)
+        if (ordered_vector_count(&island->root_chain.nodes) != 2) /* 2 nodes = 1 bone */
         {
             ik_log_message("ERROR: Your tree has chains that are longer than 1 bone. Are you sure you selected the correct solver algorithm?");
             return -1;
         }
-        if (ordered_vector_count(&chain_tree->root_chain.children) > 0)
+        if (ordered_vector_count(&island->root_chain.children) > 0)
         {
             ik_log_message("ERROR: Your tree has child chains. This solver does not support arbitrary trees. You will need to switch to another algorithm (e.g. FABRIK)");
             return -1;
@@ -53,10 +53,10 @@ solver_1bone_rebuild(ik_solver_t* solver)
 int
 solver_1bone_solve(ik_solver_t* solver)
 {
-    ORDERED_VECTOR_FOR_EACH(&solver->chain_trees, ik_chain_tree_t, chain_tree)
+    ORDERED_VECTOR_FOR_EACH(&solver->chain_tree.islands, chain_island_t, island)
         ik_node_t* node_tip;
         ik_node_t* node_base;
-        ik_chain_t* root_chain = &chain_tree->root_chain;
+        chain_t* root_chain = &island->root_chain;
 
         assert(ordered_vector_count(&root_chain->nodes) > 1);
         node_tip = *(ik_node_t**)ordered_vector_get_element(&root_chain->nodes, 0);
@@ -73,8 +73,8 @@ solver_1bone_solve(ik_solver_t* solver)
 
     if (solver->flags & SOLVER_CALCULATE_FINAL_ROTATIONS)
     {
-        ORDERED_VECTOR_FOR_EACH(&solver->chain_trees, ik_chain_tree_t, chain_tree)
-            calculate_global_rotations(&chain_tree->root_chain);
+        ORDERED_VECTOR_FOR_EACH(&solver->chain_tree.islands, chain_island_t, island)
+            calculate_global_rotations(&island->root_chain);
         ORDERED_VECTOR_END_EACH
     }
 

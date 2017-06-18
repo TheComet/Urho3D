@@ -1,5 +1,4 @@
 #include "ik/bst_vector.h"
-#include "ik/chain.h"
 #include "ik/constraint.h"
 #include "ik/effector.h"
 #include "ik/log.h"
@@ -48,7 +47,7 @@ solver_FABRIK_destruct(ik_solver_t* solver)
 
 /* ------------------------------------------------------------------------- */
 static void
-determine_target_data_from_effector(ik_chain_t* chain, vec3_t* target_position)
+determine_target_data_from_effector(chain_t* chain, vec3_t* target_position)
 {
     /* Extract effector node and get its effector object */
     ik_node_t* effector_node;
@@ -94,7 +93,7 @@ determine_target_data_from_effector(ik_chain_t* chain, vec3_t* target_position)
 
 /* ------------------------------------------------------------------------- */
 static position_direction_t
-solve_chain_forwards_with_target_rotation(ik_chain_t* chain)
+solve_chain_forwards_with_target_rotation(chain_t* chain)
 {
     int node_count, node_idx;
     int average_count;
@@ -106,7 +105,7 @@ solve_chain_forwards_with_target_rotation(ik_chain_t* chain)
      * Target position is the average of all solved child chain base positions.
      */
     average_count = 0;
-    ORDERED_VECTOR_FOR_EACH(&chain->children, ik_chain_t, child)
+    ORDERED_VECTOR_FOR_EACH(&chain->children, chain_t, child)
         position_direction_t child_posdir = solve_chain_forwards_with_target_rotation(child);
         vec3_add_vec3(target.position.f, child_posdir.position.f);
         vec3_add_vec3(target.direction.f, child_posdir.direction.f);
@@ -168,7 +167,7 @@ solve_chain_forwards_with_target_rotation(ik_chain_t* chain)
 
 /* ------------------------------------------------------------------------- */
 vec3_t
-solve_chain_forwards_with_constraints(ik_chain_t* chain)
+solve_chain_forwards_with_constraints(chain_t* chain)
 {
     int node_count, node_idx;
     int average_count;
@@ -178,7 +177,7 @@ solve_chain_forwards_with_constraints(ik_chain_t* chain)
      * Target position is the average of all solved child chain base positions.
      */
     average_count = 0;
-    ORDERED_VECTOR_FOR_EACH(&chain->children, ik_chain_t, child)
+    ORDERED_VECTOR_FOR_EACH(&chain->children, chain_t, child)
         vec3_t child_base_position = solve_chain_forwards_with_constraints(child);
         vec3_add_vec3(target_position.f, child_base_position.f);
         ++average_count;
@@ -262,7 +261,7 @@ solve_chain_forwards_with_constraints(ik_chain_t* chain)
 
 /* ------------------------------------------------------------------------- */
 vec3_t
-solve_chain_forwards(ik_chain_t* chain)
+solve_chain_forwards(chain_t* chain)
 {
     int node_count, node_idx;
     int average_count;
@@ -272,7 +271,7 @@ solve_chain_forwards(ik_chain_t* chain)
      * Target position is the average of all solved child chain base positions.
      */
     average_count = 0;
-    ORDERED_VECTOR_FOR_EACH(&chain->children, ik_chain_t, child)
+    ORDERED_VECTOR_FOR_EACH(&chain->children, chain_t, child)
         vec3_t child_base_position = solve_chain_forwards(child);
         vec3_add_vec3(target_position.f, child_base_position.f);
         ++average_count;
@@ -313,7 +312,7 @@ solve_chain_forwards(ik_chain_t* chain)
 
 /* ------------------------------------------------------------------------- */
 static void
-solve_chain_backwards_with_constraints(ik_chain_t* chain,
+solve_chain_backwards_with_constraints(chain_t* chain,
                                        vec3_t target_position,
                                        vec3_t accumulated_positions)
 {
@@ -393,14 +392,14 @@ solve_chain_backwards_with_constraints(ik_chain_t* chain,
         child_node->position = target_position;
     }
 
-    ORDERED_VECTOR_FOR_EACH(&chain->children, ik_chain_t, child)
+    ORDERED_VECTOR_FOR_EACH(&chain->children, chain_t, child)
         solve_chain_backwards_with_constraints(child, target_position, accumulated_positions);
     ORDERED_VECTOR_END_EACH
 }
 
 /* ------------------------------------------------------------------------- */
 void
-solve_chain_backwards(ik_chain_t* chain, vec3_t target_position)
+solve_chain_backwards(chain_t* chain, vec3_t target_position)
 {
     int node_idx = ordered_vector_count(&chain->nodes) - 1;
 
@@ -432,7 +431,7 @@ solve_chain_backwards(ik_chain_t* chain, vec3_t target_position)
         child_node->position = target_position;
     }
 
-    ORDERED_VECTOR_FOR_EACH(&chain->children, ik_chain_t, child)
+    ORDERED_VECTOR_FOR_EACH(&chain->children, chain_t, child)
         solve_chain_backwards(child, target_position);
     ORDERED_VECTOR_END_EACH
 }
@@ -508,8 +507,8 @@ solver_FABRIK_solve(ik_solver_t* solver)
         vec3_t root_position;
 
         /* Actual algorithm here */
-        ORDERED_VECTOR_FOR_EACH(&fabrik->chain_trees, ik_chain_tree_t, chain_tree)
-            ik_chain_t* root_chain = &chain_tree->root_chain;
+        ORDERED_VECTOR_FOR_EACH(&fabrik->chain_tree.islands, chain_island_t, island)
+            chain_t* root_chain = &island->root_chain;
 
             /* The algorithm assumes chains have at least one bone. This should
              * be asserted while building the chain trees, but it can't hurt
@@ -548,8 +547,8 @@ solver_FABRIK_solve(ik_solver_t* solver)
 
     if (solver->flags & SOLVER_CALCULATE_FINAL_ROTATIONS)
     {
-        ORDERED_VECTOR_FOR_EACH(&fabrik->chain_trees, ik_chain_tree_t, chain_tree)
-            calculate_global_rotations(chain_tree);
+        ORDERED_VECTOR_FOR_EACH(&fabrik->chain_tree.islands, chain_island_t, island)
+            calculate_global_rotations(&island->root_chain);
         ORDERED_VECTOR_END_EACH
     }
 
