@@ -55,6 +55,18 @@ static bool ChildrenHaveEffector(const Node* node)
         if (ChildrenHaveEffector(it->Get()))
             return true;
     }
+
+    return false;
+}
+
+static void ApplyConstraintsCallback(ik_node_t* ikNode)
+{
+    Node* node = (Node*)ikNode->user_data;
+    IKConstraint* constraint = node->GetComponent<IKConstraint>();
+    if (constraint == NULL)
+        return;
+
+    quat_set_identity(ikNode->rotation.f);
 }
 
 static void ApplyConstraintsCallback(ik_node_t* ikNode)
